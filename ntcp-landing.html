@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NT Continuity Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment:      #f6f1e9;
+    --parchment-dark: #ede5d4;
+    --parchment-deep: #e2d8c5;
+    --ink:            #1a1710;
+    --ink-light:      #3b3529;
+    --ink-muted:      #78705e;
+    --green-deep:     #253328;
+    --green-mid:      #3a5640;
+    --green-light:    #567a5c;
+    --ochre:          #b5891f;
+    --ochre-light:    #d0a030;
+    --ochre-pale:     #e8d49a;
+    --rule:           #ccc3ae;
+    --rule-dark:      #9e9280;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--parchment);
+    color: var(--ink);
+    font-family: 'Lora', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* === GRAIN OVERLAY === */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.032;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+  }
+
+  /* === TOPO GRID === */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(140,120,80,0.06) 79px, rgba(140,120,80,0.06) 80px),
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(140,120,80,0.04) 79px, rgba(140,120,80,0.04) 80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* === NAV === */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    padding: 22px 56px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to bottom, rgba(246,241,233,0.98) 65%, transparent);
+    backdrop-filter: blur(2px);
+  }
+  .nav-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--green-deep);
+  }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-muted); text-decoration: none;
+    transition: color 0.25s;
+  }
+  .nav-links a:hover { color: var(--green-deep); }
+
+  /* === HERO === */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding: 0 56px; padding-top: 110px; gap: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-left {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 80px 64px 80px 0;
+    border-right: 1px solid var(--rule);
+  }
+  .hero-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--ochre); margin-bottom: 36px;
+    display: flex; align-items: center; gap: 14px;
+    opacity: 0; animation: fadeUp 0.8s ease 0.1s forwards;
+  }
+  .hero-eyebrow::before {
+    content: ''; display: block;
+    width: 28px; height: 1px; background: var(--ochre);
+  }
+  .hero-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 6.5vw, 92px);
+    font-weight: 600; line-height: 1.02;
+    color: var(--ink); letter-spacing: -0.015em;
+    margin-bottom: 44px;
+    opacity: 0; animation: fadeUp 0.9s ease 0.25s forwards;
+  }
+  .hero-headline em { font-style: italic; color: var(--green-mid); }
+  .hero-sub {
+    font-size: 17px; line-height: 1.85;
+    color: var(--ink-light); max-width: 420px;
+    border-left: 2px solid var(--ochre); padding-left: 22px;
+    opacity: 0; animation: fadeUp 0.9s ease 0.4s forwards;
+  }
+  .hero-right {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 80px 0 80px 64px;
+    opacity: 0; animation: fadeUp 0.9s ease 0.5s forwards;
+  }
+  .hero-pull {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(26px, 3.2vw, 44px);
+    font-weight: 300; font-style: italic;
+    line-height: 1.35; color: var(--ink-light); margin-bottom: 52px;
+  }
+  .hero-pull strong { font-weight: 600; font-style: normal; color: var(--ink); }
+  .hero-rule-block {
+    border-top: 1px solid var(--rule-dark);
+    padding-top: 32px;
+  }
+  .hero-rule-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-muted); margin-bottom: 18px;
+  }
+  .hero-body { font-size: 16px; line-height: 1.88; color: var(--ink-light); }
+
+  /* === COMPASS MARK === */
+  .compass {
+    position: absolute; bottom: 40px; right: 56px;
+    width: 64px; height: 64px; opacity: 0.18;
+    animation: spin 80s linear infinite;
+  }
+
+  /* === SECTION BASE === */
+  section { position: relative; z-index: 1; }
+  .section-inner { max-width: 1120px; margin: 0 auto; padding: 108px 56px; }
+  .section-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ochre); margin-bottom: 22px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .section-label::before {
+    content: ''; display: block;
+    width: 28px; height: 1px; background: var(--ochre);
+  }
+  h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(38px, 4.5vw, 64px);
+    font-weight: 600; line-height: 1.08;
+    color: var(--ink); margin-bottom: 44px;
+    letter-spacing: -0.015em;
+  }
+  h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; font-weight: 600;
+    color: var(--ink); margin-bottom: 16px;
+  }
+  p { color: var(--ink-light); margin-bottom: 22px; font-size: 17px; }
+  p:last-child { margin-bottom: 0; }
+
+  /* === PROBLEM === */
+  .problem { border-bottom: 1px solid var(--rule); }
+  .problem-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; margin-top: 64px;
+  }
+  .problem-col-left {
+    border-right: 1px solid var(--rule);
+    padding-right: 80px;
+  }
+  .problem-pull {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 21px; font-style: italic; font-weight: 400;
+    color: var(--ink-light); line-height: 1.65;
+    border-left: 2px solid var(--green-mid);
+    padding-left: 22px; margin: 32px 0;
+  }
+
+  /* === DARK SECTION === */
+  .dark-section {
+    background-color: var(--green-deep);
+    color: var(--parchment);
+    border-top: 1px solid #18261b;
+    border-bottom: 1px solid #18261b;
+    overflow: hidden;
+  }
+  .dark-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(255,255,255,0.025) 79px, rgba(255,255,255,0.025) 80px),
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,0.015) 79px, rgba(255,255,255,0.015) 80px);
+    pointer-events: none;
+  }
+  .dark-section h2 { color: var(--ochre-pale); }
+  .dark-section p { color: rgba(246,241,233,0.78); }
+  .dark-section h3 { color: var(--parchment); }
+  .dark-section .section-label { color: var(--ochre-light); }
+  .dark-section .section-label::before { background: var(--ochre-light); }
+
+  /* === PILLARS === */
+  .pillars {
+    margin-top: 68px;
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .pillar {
+    padding: 52px 44px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    position: relative; overflow: hidden;
+    transition: background 0.3s;
+  }
+  .pillar:hover { background: rgba(255,255,255,0.03); }
+  .pillar:last-child { border-right: none; }
+  .pillar-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 96px; font-weight: 300; line-height: 1;
+    color: rgba(255,255,255,0.05);
+    position: absolute; top: 16px; right: 24px;
+    pointer-events: none;
+  }
+  .pillar-rule {
+    width: 28px; height: 2px;
+    background: var(--ochre-light); margin-bottom: 28px;
+  }
+  .pillar h3 { font-size: 23px; margin-bottom: 16px; color: var(--ochre-pale); }
+  .pillar p { font-size: 15px; line-height: 1.82; color: rgba(246,241,233,0.68); }
+
+  /* === DATABASE === */
+  .database { border-bottom: 1px solid var(--rule); }
+  .db-visual {
+    margin: 68px 0 0;
+    border: 1px solid var(--rule-dark);
+    background: var(--parchment-dark);
+    padding: 56px 52px 44px;
+    position: relative;
+    box-shadow: 0 2px 24px rgba(30,24,12,0.07), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .db-visual-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .db-visual-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--ink-muted);
+  }
+  .db-visual-specimen {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ochre);
+    font-style: italic;
+  }
+  .confidence-rows { display: flex; flex-direction: column; gap: 24px; }
+  .confidence-row {
+    display: grid; grid-template-columns: 220px 1fr 140px;
+    gap: 28px; align-items: center;
+  }
+  .confidence-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; letter-spacing: 0.06em;
+    color: var(--ink-light); text-align: right;
+  }
+  .confidence-bar-track {
+    height: 4px; background: var(--rule);
+    position: relative;
+  }
+  .confidence-bar-fill {
+    height: 100%; background: var(--green-mid);
+    transition: width 1s ease;
+  }
+  .confidence-bar-fill.contested { background: var(--ochre); }
+  .confidence-bar-fill.weak { background: var(--rule-dark); }
+  .confidence-tier {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .tier-high { color: var(--green-mid); }
+  .tier-contested { color: var(--ochre); }
+  .tier-low { color: var(--ink-muted); }
+  .db-caption {
+    margin-top: 36px; padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; font-style: italic;
+    color: var(--ink-muted); line-height: 1.75;
+  }
+
+  /* === RADAR CHART SECTION === */
+  .methodology { border-bottom: 1px solid var(--rule); background: var(--parchment-deep); }
+  #radar-mount {
+    margin-top: 56px;
+    min-height: 560px;
+  }
+
+  /* === SCOPE === */
+  .scope { border-bottom: 1px solid var(--rule); }
+  .scope-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 88px; margin-top: 0;
+  }
+  .timeline {
+    padding-left: 36px;
+    border-left: 1px solid var(--rule-dark);
+  }
+  .timeline-item {
+    padding: 0 0 52px 44px;
+    position: relative;
+  }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-dot {
+    position: absolute; left: -5px; top: 9px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--ochre);
+    border: 2px solid var(--parchment);
+    box-shadow: 0 0 0 3px rgba(181,137,31,0.2);
+  }
+  .timeline-era {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ochre); margin-bottom: 8px;
+  }
+  .timeline-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 23px; font-weight: 600;
+    color: var(--ink); margin-bottom: 10px;
+  }
+  .timeline-body {
+    font-size: 15px; color: var(--ink-muted);
+    line-height: 1.8; max-width: 480px; margin-bottom: 0;
+  }
+
+  /* === WHAT CHANGES === */
+  .changes { border-bottom: 1px solid var(--rule); }
+  .comparison {
+    margin-top: 64px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+    border: 1px solid var(--rule-dark);
+    box-shadow: 0 2px 24px rgba(30,24,12,0.06);
+  }
+  .comparison-col { padding: 52px 44px; }
+  .comparison-col:first-child {
+    border-right: 1px solid var(--rule-dark);
+    background: var(--parchment-dark);
+  }
+  .comparison-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; letter-spacing: 0.22em;
+    text-transform: uppercase; margin-bottom: 26px;
+  }
+  .comparison-col:first-child .comparison-heading { color: var(--ink-muted); }
+  .comparison-col:last-child .comparison-heading { color: var(--green-mid); }
+  .comparison-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-style: italic; font-weight: 400;
+    line-height: 1.68; color: var(--ink-light); margin-bottom: 20px;
+  }
+  .comparison-note {
+    font-size: 14px; color: var(--ink-muted);
+    line-height: 1.78; margin-bottom: 0;
+  }
+
+  /* === CLOSING === */
+  .closing { background: var(--ink); color: var(--parchment); text-align: center; }
+  .closing::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(255,255,255,0.018) 79px, rgba(255,255,255,0.018) 80px),
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,0.012) 79px, rgba(255,255,255,0.012) 80px);
+    pointer-events: none;
+  }
+  .closing h2 { color: var(--ochre-pale); font-size: clamp(38px, 5.5vw, 72px); margin-bottom: 28px; }
+  .closing p { color: rgba(246,241,233,0.6); max-width: 520px; margin: 0 auto 52px; }
+  .closing-rule { width: 56px; height: 1px; background: var(--ochre); margin: 44px auto; }
+  .closing-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(246,241,233,0.28); margin-bottom: 0;
+  }
+  .closing .section-label { justify-content: center; color: var(--ochre-light); }
+  .closing .section-label::before { background: var(--ochre-light); }
+
+  /* === BUTTONS === */
+  .btn-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+  .btn-row.centered { justify-content: center; }
+  .btn {
+    display: inline-block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    text-decoration: none; padding: 15px 30px;
+    border: 1px solid; cursor: pointer;
+    transition: all 0.25s;
+  }
+  .btn-primary { background: var(--green-deep); color: var(--parchment); border-color: var(--green-deep); }
+  .btn-primary:hover { background: var(--green-mid); border-color: var(--green-mid); }
+  .btn-secondary { background: transparent; color: var(--ink); border-color: var(--rule-dark); }
+  .btn-secondary:hover { border-color: var(--ink); }
+  .btn-ghost { background: transparent; color: var(--ochre-pale); border-color: rgba(232,212,154,0.28); }
+  .btn-ghost:hover { border-color: var(--ochre-pale); }
+
+  /* === REVEAL === */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.75s ease, transform 0.75s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* === FOOTER === */
+  footer {
+    position: relative; z-index: 1;
+    background: var(--ink);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 32px 56px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: rgba(246,241,233,0.28);
+  }
+  .footer-links { display: flex; gap: 32px; list-style: none; }
+  .footer-links a {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(246,241,233,0.28);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .footer-links a:hover { color: rgba(246,241,233,0.6); }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 900px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 100px 20px 56px; min-height: auto; }
+    .hero-left { border-right: none; border-bottom: 1px solid var(--rule); padding: 0 0 48px; }
+    .hero-right { padding: 44px 0 0; }
+    .compass { display: none; }
+    .section-inner { padding: 64px 20px; }
+    .problem-grid, .pillars, .comparison, .scope-grid { grid-template-columns: 1fr; }
+    .problem-col-left { border-right: none; border-bottom: 1px solid var(--rule); padding-right: 0; padding-bottom: 44px; }
+    .pillar { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 40px 24px; }
+    .pillar:last-child { border-bottom: none; }
+    .comparison-col:first-child { border-right: none; border-bottom: 1px solid var(--rule-dark); }
+    .scope-grid { gap: 48px; }
+    .timeline { padding-left: 20px; }
+    .db-visual { padding: 32px 20px 28px; }
+    .db-visual-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .confidence-row { grid-template-columns: 1fr; gap: 8px; padding-bottom: 22px; border-bottom: 1px solid var(--rule); }
+    .confidence-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .confidence-label { text-align: left; }
+    .comparison-col { padding: 36px 24px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; padding: 24px 20px; }
+    .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-mark">NT Continuity Project</span>
+  <ul class="nav-links">
+    <li><a href="#problem">The Problem</a></li>
+    <li><a href="#building">What We Build</a></li>
+    <li><a href="#methodology">The Method</a></li>
+    <li><a href="#scope">Scope</a></li>
+    <li><a href="#involve">Get Involved</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Pursuing Accountable Interpretation</div>
+    <h1 class="hero-headline">
+      Everyone Has<br>a Scholar.<br><em>Nobody Has<br>a Method.</em>
+    </h1>
+    <p class="hero-sub">
+      We have spent two centuries developing rigorous tools to establish what the New Testament says. We treat the meaning of those words like an opinion.
+    </p>
+  </div>
+  <div class="hero-right">
+    <p class="hero-pull">
+      The method everyone claims to use to interpret the New Testament has <strong>no accountability built into it.</strong>
+    </p>
+    <div class="hero-rule-block">
+      <div class="hero-rule-label">The NT Continuity Project</div>
+      <p class="hero-body">
+        We are building the infrastructure that biblical interpretation has never had: a living database of every significant interpretive argument, traceable across the full arc of Christian history, with every claim stress-tested against the full weight of the evidence.
+      </p>
+      <div class="btn-row" style="margin-top: 32px;">
+        <a href="#involve" class="btn btn-primary">Get Involved</a>
+        <a href="#building" class="btn btn-secondary">Learn More</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compass decoration -->
+  <svg class="compass" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="48" stroke="#9a8e78" stroke-width="0.5"/>
+    <circle cx="50" cy="50" r="38" stroke="#9a8e78" stroke-width="0.5"/>
+    <circle cx="50" cy="50" r="2" fill="#9a8e78"/>
+    <line x1="50" y1="2" x2="50" y2="20" stroke="#9a8e78" stroke-width="0.75"/>
+    <line x1="50" y1="80" x2="50" y2="98" stroke="#9a8e78" stroke-width="0.75"/>
+    <line x1="2" y1="50" x2="20" y2="50" stroke="#9a8e78" stroke-width="0.75"/>
+    <line x1="80" y1="50" x2="98" y2="50" stroke="#9a8e78" stroke-width="0.75"/>
+    <polygon points="50,12 47,26 53,26" fill="#b5891f" opacity="0.6"/>
+    <polygon points="50,88 47,74 53,74" fill="#9a8e78" opacity="0.4"/>
+    <text x="50" y="8" text-anchor="middle" font-family="serif" font-size="6" fill="#9a8e78" opacity="0.6">N</text>
+    <text x="50" y="98" text-anchor="middle" font-family="serif" font-size="6" fill="#9a8e78" opacity="0.4">S</text>
+    <text x="96" y="52" text-anchor="middle" font-family="serif" font-size="6" fill="#9a8e78" opacity="0.4">E</text>
+    <text x="4" y="52" text-anchor="middle" font-family="serif" font-size="6" fill="#9a8e78" opacity="0.4">W</text>
+  </svg>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem" id="problem">
+  <div class="section-inner">
+    <div class="section-label reveal">The Problem</div>
+    <h2 class="reveal">A Credential Wearing<br>the Clothes of a Method</h2>
+    <div class="problem-grid reveal">
+      <div class="problem-col-left">
+        <p>You have read the same passage with someone from the same tradition, using the same tools, and watched them arrive at a completely different conclusion. You cited scholars. They cited scholars. Nobody moved.</p>
+        <p>This is not a personality problem or a lack of study. The grammatical-historical method, which everyone claims to use, has no agreed standard for what counts as evidence, no way to track where scholars actually agree, and no mechanism to test whether a conclusion could be wrong.</p>
+        <blockquote class="problem-pull">
+          In practice, an interpreter finds the conclusion they find most convincing, locates scholars whose framing supports it, and cites those scholars as independent confirmation. The loop closes on itself.
+        </blockquote>
+        <p>Nothing inside the method breaks it open.</p>
+      </div>
+      <div>
+        <p>Textual criticism asks what the text originally said. That question is treated as a science: thousands of manuscript variants, carefully weighed, documented, contested in peer-reviewed literature, tracked over generations.</p>
+        <p>Hermeneutics asks what the text means. That question is treated as an opinion.</p>
+        <p>Careful scholars have produced profound work within this framework. The framework itself has been coasting on reputation rather than mechanism for a long time. The NT Continuity Project is building the mechanism.</p>
+        <div class="btn-row" style="margin-top: 40px;">
+          <a href="#building" class="btn btn-primary">See What We Are Building</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT WE BUILD -->
+<section class="dark-section" id="building">
+  <div class="section-inner">
+    <div class="section-label reveal">What We Are Building</div>
+    <h2 class="reveal">Three Structures.<br>One Infrastructure.</h2>
+    <div class="pillars reveal">
+      <div class="pillar">
+        <div class="pillar-number">I</div>
+        <div class="pillar-rule"></div>
+        <h3>Conferences</h3>
+        <p>Scholars from genuinely different traditions engage the same texts with the same transparency requirements applied to all of them. Live cross-examination. Visible presuppositions. Arguments that have to survive contact with people who do not share your tradition's commitments. Regional gatherings bring the conversation to pastors, educators, and serious lay readers.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-number">II</div>
+        <div class="pillar-rule"></div>
+        <h3>A Quarterly Journal</h3>
+        <p>Each issue is a structured conversation: multiple contributors from different traditions, one question, the same transparency requirements applied to all of them. Every argument must name its tradition, state its presuppositions, show its chain of continuity, and state what evidence would require revision.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-number">III</div>
+        <div class="pillar-rule"></div>
+        <h3>A Living Database</h3>
+        <p>Every peer-reviewed data point enters a structured, searchable record. The software built on it surfaces the full evidentiary base for any argument, stress-tests its load-bearing claims, maps the counterarguments, and returns a probability profile showing exactly where a reading is strong, contested, or dependent on unverified assumptions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATABASE DETAIL -->
+<section class="database">
+  <div class="section-inner">
+    <div class="section-label reveal">The Database</div>
+    <h2 class="reveal">What the Software<br>Actually Does</h2>
+    <div class="reveal">
+      <p style="max-width:660px;">No commentary can do what this database does. It shows you the full landscape of evidence for any interpretive argument, including data you have not considered. It returns not a verdict but a probability profile: where your reading is strong, where it is contested, and what it depends on that has not been independently verified.</p>
+      <p style="max-width:660px;">The output for many questions will be <em>contested</em> or <em>underdetermined.</em> That is it working correctly. Honesty about uncertainty is more useful than false confidence.</p>
+    </div>
+    <div class="db-visual reveal">
+      <div class="db-visual-header">
+        <span class="db-visual-title">Probability Profile</span>
+        <span class="db-visual-specimen">Specimen &middot; Justification by Faith</span>
+      </div>
+      <div class="confidence-rows">
+        <div class="confidence-row">
+          <div class="confidence-label">Lexical Continuity</div>
+          <div class="confidence-bar-track"><div class="confidence-bar-fill" style="width:0" data-w="82%"></div></div>
+          <div class="confidence-tier tier-high">High</div>
+        </div>
+        <div class="confidence-row">
+          <div class="confidence-label">Cross-Traditional Convergence</div>
+          <div class="confidence-bar-track"><div class="confidence-bar-fill contested" style="width:0" data-w="51%"></div></div>
+          <div class="confidence-tier tier-contested">Contested</div>
+        </div>
+        <div class="confidence-row">
+          <div class="confidence-label">Pre-Constantinian Reception</div>
+          <div class="confidence-bar-track"><div class="confidence-bar-fill" style="width:0" data-w="74%"></div></div>
+          <div class="confidence-tier tier-high">High</div>
+        </div>
+        <div class="confidence-row">
+          <div class="confidence-label">Presupposition Independence</div>
+          <div class="confidence-bar-track"><div class="confidence-bar-fill weak" style="width:0" data-w="34%"></div></div>
+          <div class="confidence-tier tier-low">Underdetermined</div>
+        </div>
+        <div class="confidence-row">
+          <div class="confidence-label">Falsification Condition</div>
+          <div class="confidence-bar-track"><div class="confidence-bar-fill contested" style="width:0" data-w="58%"></div></div>
+          <div class="confidence-tier tier-contested">Contested</div>
+        </div>
+      </div>
+      <div class="db-caption">
+        A specimen profile. The database returns this kind of output for any argument submitted to it. Confidence tiers are derived from the weight and breadth of the evidentiary base, not from any tradition's doctrinal commitments.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- METHODOLOGY / RADAR CHART -->
+<section class="methodology" id="methodology">
+  <div class="section-inner">
+    <div class="section-label reveal">Methodological Transparency Index</div>
+    <h2 class="reveal">How the Methods<br>Actually Compare</h2>
+    <div class="reveal">
+      <p style="max-width:660px;">Each axis scores the grammatical-historical method and the NT Continuity Method against criteria drawn from philosophy of science: falsifiability, repeatability, standardization, consensus mechanism, transparent reasoning, and confirmation resistance. Click any axis or table row to see the scoring rationale.</p>
+    </div>
+    <div id="radar-mount" class="reveal"></div>
+  </div>
+</section>
+
+<!-- SCOPE -->
+<section class="scope" id="scope">
+  <div class="section-inner">
+    <div class="section-label reveal">The Scope of Evidence</div>
+    <h2 class="reveal">Meaning Does Not Begin<br>at the Moment of Writing</h2>
+    <div class="scope-grid reveal">
+      <div>
+        <p>The project traces continuity across the full arc of the tradition's reception. A reading that cannot survive contact with the breadth of that record is telling you something. The dominant methodological conversations have been conducted largely in German, English, and French, inside Western academic institutions.</p>
+        <p>The texts were not written in the West. The earliest interpreters were not Western. Syriac Christianity. The Coptic and Ethiopian traditions. The Armenian church. Asian and African theological development, ancient and contemporary. These are not supplements to the main conversation. They are part of the evidentiary base.</p>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-era">Period I</div>
+          <div class="timeline-title">Ancient Near Eastern World</div>
+          <p class="timeline-body">The conceptual vocabulary of the Hebrew scriptures does not emerge from nowhere. Creation, covenant, kingship, temple, sacrifice: these categories arrive in the biblical text already carrying semantic weight.</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-era">Period II</div>
+          <div class="timeline-title">Second Temple Judaism</div>
+          <p class="timeline-body">The world in which the New Testament was written. The debates, the expectations, the contested categories, the diversity of Jewish thought between the Testaments: all of this is the immediate context.</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-era">Period III</div>
+          <div class="timeline-title">The New Testament Era</div>
+          <p class="timeline-body">The texts themselves, read with the full weight of what preceded them and with attention to how they were received by those who first read them.</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-era">Periods IV&#8211;VI</div>
+          <div class="timeline-title">Early Church Through the Modern Era</div>
+          <p class="timeline-body">Pre-Constantinian, pre-Schism, premodern, and modern, including the global traditions that developed outside the European stream.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT CHANGES -->
+<section class="changes">
+  <div class="section-inner">
+    <div class="section-label reveal">What Changes</div>
+    <h2 class="reveal">Disagreement Becomes<br>Legible</h2>
+    <p style="max-width:600px;" class="reveal">Two scholars who disagree but are looking at the same probability profile are having a different conversation than two scholars citing competing authorities at each other.</p>
+    <div class="comparison reveal">
+      <div class="comparison-col">
+        <div class="comparison-heading">Before</div>
+        <p class="comparison-quote">"The scholars I have consulted are clear on this. Your scholars are wrong."</p>
+        <p class="comparison-note">Presuppositions hidden. Evidence selectively presented. No mechanism to test the claim. No path forward.</p>
+      </div>
+      <div class="comparison-col">
+        <div class="comparison-heading">After</div>
+        <p class="comparison-quote">"I hold this tentatively. The earliest reception is ambiguous and my tradition has a strong interest in one reading over the other."</p>
+        <p class="comparison-note">Presuppositions named. Confidence earned rather than claimed. Weaknesses visible. The conversation can actually go somewhere.</p>
+      </div>
+    </div>
+    <p style="max-width:640px; margin-top:52px;" class="reveal">The goal is not to end disagreement. It is to make disagreement worth having. To raise the floor of accountability so that when two people read the same text and reach different conclusions, they can identify precisely where they diverge and why.</p>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section class="closing" id="involve">
+  <div class="section-inner reveal">
+    <div class="section-label">Get Involved</div>
+    <h2>The Words Were Worth<br>Getting Right</h2>
+    <p>The New Testament text was preserved with extraordinary care because someone believed the words mattered enough to get exactly right. Their meaning deserves the same seriousness.</p>
+    <div class="btn-row centered">
+      <a href="mailto:info@ntcontinuityproject.org" class="btn btn-primary">Contact the Project</a>
+      <a href="#building" class="btn btn-ghost">Learn About the Methodology</a>
+    </div>
+    <div class="closing-rule"></div>
+    <p class="closing-tagline">Forming founding editorial board and conference planning committee</p>
+  </div>
+</section>
+
+<footer>
+  <span class="footer-mark">NT Continuity Project &copy; 2026</span>
+  <ul class="footer-links">
+    <li><a href="#problem">The Problem</a></li>
+    <li><a href="#building">What We Build</a></li>
+    <li><a href="#methodology">The Method</a></li>
+    <li><a href="#scope">Scope</a></li>
+    <li><a href="#involve">Get Involved</a></li>
+  </ul>
+</footer>
+
+<!-- Radar chart: pure SVG + vanilla JS, zero dependencies -->
+<script>
+(function() {
+  var F = "'Cormorant Garamond', Georgia, serif";
+  var C = {
+    ink:'#1a1710', inkLight:'#3b3529', inkMuted:'#78705e',
+    greenDeep:'#253328', greenMid:'#3a5640',
+    ochre:'#b5891f', ochreLight:'#d0a030', ochrePale:'#e8d49a',
+    parchment:'#f6f1e9', parchmentDark:'#ede5d4',
+    rule:'#ccc3ae', ruleDark:'#9e9280',
+    ghm:'#9b2516', ntcm:'#3a5640'
+  };
+
+  var axes = [
+    { key:'falsifiability', label:'Falsifiability',
+      desc:'Can the conclusion be proven wrong by specifiable evidence?',
+      ghm:2, ntcm:7, hard:10,
+      ghmNote:'Conclusions are routinely recontextualized rather than falsified. No agreed threshold for disconfirmation exists within the method.',
+      ntcmNote:'Continuity tracking creates falsifiable claims: if a term shifts meaning across the tradition, the interpretation fails.' },
+    { key:'repeatability', label:'Repeatability',
+      desc:'Would independent practitioners reach the same conclusion?',
+      ghm:3, ntcm:6, hard:10,
+      ghmNote:'High inter-scholar variance is treated as normal. No interrater reliability protocols exist.',
+      ntcmNote:'Consensus tracking across traditions introduces a partial check on individual interpreter variance.' },
+    { key:'standardization', label:'Standardization',
+      desc:'Is there an agreed protocol for applying the method?',
+      ghm:3, ntcm:6, hard:9,
+      ghmNote:'No agreed corpus, no weighting rules, no threshold for what counts as sufficient lexical evidence.',
+      ntcmNote:'Proposes explicit criteria: which traditions count, how continuity is measured, what breaks the chain.' },
+    { key:'consensus', label:'Consensus Mechanism',
+      desc:'Is there a built-in way to track and update scholarly consensus?',
+      ghm:2, ntcm:7, hard:9,
+      ghmNote:'Consensus is informal, citation-network dependent, and tradition-fragmented. No meta-analytic equivalent.',
+      ntcmNote:'Explicitly tracks where traditions converge and diverge, creating a measurable consensus map.' },
+    { key:'transparency', label:'Transparent Reasoning',
+      desc:'Can another scholar reproduce the reasoning chain?',
+      ghm:4, ntcm:8, hard:9,
+      ghmNote:'Exegetical arguments are public, but source selection and weighting criteria remain opaque.',
+      ntcmNote:'Requires explicit citation of which traditions, which texts, and what counts as continuity.' },
+    { key:'confirmation', label:'Confirmation Resistance',
+      desc:'Does the method resist motivated selection of supporting evidence?',
+      ghm:2, ntcm:6, hard:9,
+      ghmNote:'Scholars select communities whose framing supports their conclusion, then cite them as independent confirmation.',
+      ntcmNote:'Cross-traditional consensus requirement raises the cost of cherry-picking significantly.' }
+  ];
+
+  var N = axes.length, CX = 220, CY = 215, R = 160, MAX = 10, LEVELS = 5;
+  var selected = 'consensus'; // default open tab
+
+  function angle(i) { return (Math.PI * 2 * i / N) - Math.PI / 2; }
+  function pt(val, i) {
+    var a = angle(i), r = (val / MAX) * R;
+    return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
+  }
+  function ptsStr(vals) {
+    return vals.map(function(v, i) { var p = pt(v, i); return p.x + ',' + p.y; }).join(' ');
+  }
+  function rgba(hex, alpha) {
+    var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
+  }
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  // ── BUILD SVG ──────────────────────────────────────────────────
+  function buildSVG() {
+    var svg = svgEl('svg', { viewBox:'0 0 440 430', width:'100%' });
+    svg.style.cssText = 'display:block;overflow:visible;';
+
+    // Grid rings
+    for (var l = 1; l <= LEVELS; l++) {
+      var r = (l / LEVELS) * R;
+      var pts = axes.map(function(_, i) {
+        var a = angle(i);
+        return (CX + r * Math.cos(a)) + ',' + (CY + r * Math.sin(a));
+      }).join(' ');
+      svg.appendChild(svgEl('polygon', { points:pts, fill:'none', stroke:C.rule, 'stroke-width':'0.6' }));
+    }
+    // Spokes
+    axes.forEach(function(_, i) {
+      var a = angle(i);
+      svg.appendChild(svgEl('line', {
+        x1:CX, y1:CY,
+        x2:CX + R * Math.cos(a), y2:CY + R * Math.sin(a),
+        stroke:C.rule, 'stroke-width':'0.6'
+      }));
+    });
+
+    // Hard science polygon
+    svg.appendChild(svgEl('polygon', {
+      points: ptsStr(axes.map(function(a) { return a.hard; })),
+      fill: rgba(C.ruleDark, 0.05), stroke: C.ruleDark,
+      'stroke-width':'1', 'stroke-dasharray':'4 3'
+    }));
+    // GHM polygon
+    svg.appendChild(svgEl('polygon', {
+      id:'poly-ghm',
+      points: ptsStr(axes.map(function(a) { return a.ghm; })),
+      fill: rgba(C.ghm, 0.13), stroke: C.ghm, 'stroke-width':'2.5'
+    }));
+    // NTCM polygon
+    svg.appendChild(svgEl('polygon', {
+      id:'poly-ntcm',
+      points: ptsStr(axes.map(function(a) { return a.ntcm; })),
+      fill: rgba(C.ntcm, 0.16), stroke: C.ntcm, 'stroke-width':'2.5'
+    }));
+
+    // Axis dot hit targets + labels
+    axes.forEach(function(ax, i) {
+      var a = angle(i);
+      var lx = CX + (R + 26) * Math.cos(a);
+      var ly = CY + (R + 26) * Math.sin(a);
+      var words = ax.label.split(' ');
+      var lineH = 15;
+      var totalH = words.length * lineH;
+
+      var g = svgEl('g', { id:'lbl-'+ax.key });
+      g.style.cursor = 'pointer';
+      (function(key) {
+        g.addEventListener('click', function() { selectTab(key); });
+      })(ax.key);
+
+      // Background pill for hit area
+      var bg = svgEl('rect', {
+        x: lx - 36, y: ly - totalH/2 - 4,
+        width: 72, height: totalH + 8,
+        rx: 3, fill: 'transparent'
+      });
+      bg.setAttribute('id', 'pill-'+ax.key);
+      g.appendChild(bg);
+
+      words.forEach(function(w, wi) {
+        var t = svgEl('text', {
+          x: lx, y: ly + (wi - (words.length - 1) / 2) * lineH,
+          'text-anchor':'middle', 'dominant-baseline':'middle',
+          'font-family':F, 'font-size':'12', 'font-weight':'500',
+          fill: C.inkMuted
+        });
+        t.setAttribute('id', 'lt-'+ax.key+'-'+wi);
+        t.textContent = w;
+        g.appendChild(t);
+      });
+
+      svg.appendChild(g);
+    });
+
+    return svg;
+  }
+
+  // ── BUILD TAB STRIP ────────────────────────────────────────────
+  function buildTabs() {
+    var wrap = document.createElement('div');
+    wrap.id = 'tab-strip';
+    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:28px;margin-bottom:0;';
+
+    axes.forEach(function(ax) {
+      var btn = document.createElement('button');
+      btn.id = 'tab-'+ax.key;
+      btn.textContent = ax.label;
+      btn.style.cssText = [
+        'font-family:'+F,
+        'font-size:12px',
+        'letter-spacing:0.1em',
+        'padding:8px 14px',
+        'border:1px solid '+C.ruleDark,
+        'background:transparent',
+        'color:'+C.inkMuted,
+        'cursor:pointer',
+        'transition:all 0.2s',
+        'white-space:nowrap'
+      ].join(';');
+      (function(key) {
+        btn.addEventListener('click', function() { selectTab(key); });
+        btn.addEventListener('mouseover', function() {
+          if (selected !== key) { btn.style.borderColor = C.inkMuted; btn.style.color = C.inkLight; }
+        });
+        btn.addEventListener('mouseout', function() {
+          if (selected !== key) { btn.style.borderColor = C.ruleDark; btn.style.color = C.inkMuted; }
+        });
+      })(ax.key);
+      wrap.appendChild(btn);
+    });
+    return wrap;
+  }
+
+  // ── BUILD DETAIL PANEL ─────────────────────────────────────────
+  function buildPanel() {
+    var el = document.createElement('div');
+    el.id = 'detail-panel';
+    el.style.cssText = [
+      'margin-top:8px',
+      'padding:28px 32px',
+      'border:1px solid '+C.ruleDark,
+      'border-left:3px solid '+C.ochre,
+      'background:'+C.parchmentDark,
+      'transition:opacity 0.2s'
+    ].join(';');
+    return el;
+  }
+
+  // ── BUILD LEGEND ───────────────────────────────────────────────
+  function buildLegend() {
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:20px 32px;margin-top:20px;padding-top:20px;border-top:1px solid '+C.rule+';';
+    var items = [
+      { label:'Hard Science Baseline', color:C.ruleDark, dash:true },
+      { label:'Grammatical-Historical Method', color:C.ghm, dash:false },
+      { label:'NT Continuity Method', color:C.ntcm, dash:false }
+    ];
+    items.forEach(function(item) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;';
+      var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('width','24'); svg.setAttribute('height','12');
+      svg.style.flexShrink = '0';
+      var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1','0'); line.setAttribute('y1','6');
+      line.setAttribute('x2','24'); line.setAttribute('y2','6');
+      line.setAttribute('stroke', item.color);
+      line.setAttribute('stroke-width','2.5');
+      if (item.dash) line.setAttribute('stroke-dasharray','4 3');
+      svg.appendChild(line);
+      row.appendChild(svg);
+      var lbl = document.createElement('span');
+      lbl.style.cssText = 'font-family:'+F+';font-size:13px;color:'+C.inkLight+';line-height:1.4;';
+      lbl.textContent = item.label;
+      row.appendChild(lbl);
+      wrap.appendChild(row);
+    });
+    return wrap;
+  }
+
+  // ── RENDER DETAIL CONTENT ──────────────────────────────────────
+  function renderPanel(ax) {
+    var panel = document.getElementById('detail-panel');
+    if (!panel) return;
+    panel.innerHTML = ''
+      + '<p style="font-family:'+F+';font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:'+C.ochre+';margin-bottom:6px;">'+ax.label+'</p>'
+      + '<p style="font-family:'+F+';font-size:15px;color:'+C.inkMuted+';font-style:italic;margin-bottom:24px;line-height:1.6;">'+ax.desc+'</p>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;">'
+      + '<div style="border-right:1px solid '+C.rule+';padding-right:28px;">'
+      + '<p style="font-family:'+F+';font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:'+C.ghm+';margin-bottom:10px;font-weight:700;">Grammatical-Historical &nbsp;&mdash;&nbsp; '+ax.ghm+' / 10</p>'
+      + '<p style="font-size:14px;color:'+C.inkLight+';line-height:1.75;font-family:'+F+';">'+ax.ghmNote+'</p>'
+      + '</div>'
+      + '<div>'
+      + '<p style="font-family:'+F+';font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:'+C.ntcm+';margin-bottom:10px;font-weight:700;">NT Continuity Method &nbsp;&mdash;&nbsp; '+ax.ntcm+' / 10</p>'
+      + '<p style="font-size:14px;color:'+C.inkLight+';line-height:1.75;font-family:'+F+';">'+ax.ntcmNote+'</p>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // ── SELECT TAB ─────────────────────────────────────────────────
+  function selectTab(key) {
+    selected = key;
+
+    // Update SVG axis labels
+    axes.forEach(function(ax) {
+      var isActive = ax.key === key;
+      var pill = document.getElementById('pill-'+ax.key);
+      if (pill) pill.setAttribute('fill', isActive ? rgba(C.ochre, 0.08) : 'transparent');
+      var wi = 0;
+      while (document.getElementById('lt-'+ax.key+'-'+wi)) {
+        var t = document.getElementById('lt-'+ax.key+'-'+wi);
+        t.setAttribute('fill', isActive ? C.ochre : C.inkMuted);
+        t.setAttribute('font-weight', isActive ? '700' : '500');
+        t.setAttribute('font-size', isActive ? '13' : '12');
+        wi++;
+      }
+    });
+
+    // Update tab buttons
+    axes.forEach(function(ax) {
+      var btn = document.getElementById('tab-'+ax.key);
+      if (!btn) return;
+      var isActive = ax.key === key;
+      btn.style.background = isActive ? C.greenDeep : 'transparent';
+      btn.style.color = isActive ? C.ochrePale : C.inkMuted;
+      btn.style.borderColor = isActive ? C.greenDeep : C.ruleDark;
+    });
+
+    // Render panel
+    var ax = axes.filter(function(a) { return a.key === key; })[0];
+    if (ax) renderPanel(ax);
+  }
+
+  // ── INIT ───────────────────────────────────────────────────────
+  function init() {
+    var mount = document.getElementById('radar-mount');
+    if (!mount) return;
+    mount.style.fontFamily = F;
+
+    // Two-column layout: chart left, tabs+panel right
+    var grid = document.createElement('div');
+    grid.id = 'radar-grid';
+    grid.style.cssText = 'display:grid;grid-template-columns:440px 1fr;gap:40px;align-items:start;';
+
+    // Left: SVG chart
+    var chartWrap = document.createElement('div');
+    chartWrap.appendChild(buildSVG());
+    chartWrap.appendChild(buildLegend());
+    grid.appendChild(chartWrap);
+
+    // Right: tabs + panel
+    var rightWrap = document.createElement('div');
+    rightWrap.appendChild(buildTabs());
+    rightWrap.appendChild(buildPanel());
+
+    var caption = document.createElement('p');
+    caption.style.cssText = 'margin-top:20px;font-size:12px;color:'+C.ruleDark+';font-style:italic;line-height:1.7;font-family:'+F+';';
+    caption.textContent = 'Scores represent structural methodological capacity, not the quality of individual scholarship. Click any tab or axis label to explore the rationale.';
+    rightWrap.appendChild(caption);
+
+    grid.appendChild(rightWrap);
+    mount.appendChild(grid);
+
+    // Mobile: stack vertically
+    function checkLayout() {
+      if (window.innerWidth < 820) {
+        grid.style.gridTemplateColumns = '1fr';
+      } else {
+        grid.style.gridTemplateColumns = '440px 1fr';
+      }
+    }
+    checkLayout();
+    window.addEventListener('resize', checkLayout);
+
+    // Set default tab
+    selectTab(selected);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+<script>
+  // Scroll reveals
+  const revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // Stagger pillars
+  document.querySelectorAll('.pillar').forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.13}s`;
+  });
+
+  // Animate confidence bars
+  const barObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.confidence-bar-fill').forEach((bar, i) => {
+          const w = bar.dataset.w;
+          setTimeout(() => {
+            bar.style.transition = `width 1s cubic-bezier(0.4,0,0.2,1) ${i * 0.18}s`;
+            bar.style.width = w;
+          }, 120);
+        });
+        barObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  const dbv = document.querySelector('.db-visual');
+  if (dbv) barObserver.observe(dbv);
+</script>
+</body>
+</html>
